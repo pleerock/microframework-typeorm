@@ -49,8 +49,6 @@ export class TypeOrmModule implements Module {
     }
 
     afterBootstrap(): Promise<any> {
-        this._connectionManager.importEntitiesFromDirectories(this.getOrmEntityDirectories());
-        this._connectionManager.importSubscribersFromDirectories(this.getOrmSubscriberDirectories());
         return Promise.resolve();
     }
 
@@ -77,6 +75,8 @@ export class TypeOrmModule implements Module {
         this._connectionManager = this.options.container.get(ConnectionManager);
         this._connectionManager.container = this.options.container;
         this.addConnections();
+        this._connectionManager.importEntitiesFromDirectories(this.getOrmEntityDirectories());
+        this._connectionManager.importSubscribersFromDirectories(this.getOrmSubscriberDirectories());
         return this.connect();
     }
 
