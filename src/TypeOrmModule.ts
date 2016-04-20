@@ -82,13 +82,13 @@ export class TypeOrmModule implements Module {
 
     private addConnections() {
         if (this.configuration.connection) {
-            if (!this.configuration.connectionDriver || this.configuration.connectionDriver === "mongodb")
+            if (!this.configuration.connectionDriver || this.configuration.connectionDriver === "mysql")
                 this._connectionManager.createConnection(new MysqlDriver(), this.configuration.connection);
         }
 
         if (this.configuration.connections) {
             this.configuration.connections
-                .filter(connection => !connection.driver || connection.driver === "mongodb")
+                .filter(connection => !connection.driver || connection.driver === "mysql")
                 .forEach(connection => this._connectionManager.createConnection(connection.name, new MysqlDriver(), connection.options));
         }
     }
@@ -116,7 +116,8 @@ export class TypeOrmModule implements Module {
                 return this._connectionManager.getConnection(connection.name).connect();
             }));
         }
-        return Promise.all(promises).then(() => {});
+        return Promise.all(promises).then(() => {
+        });
     }
 
     private getOrmEntityDirectories(): string[] {
