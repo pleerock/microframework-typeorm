@@ -124,14 +124,18 @@ export class TypeOrmModule implements Module {
         if (!this.configuration || !this.configuration.entityDirectories)
             return [this.getSourceCodeDirectory() + TypeOrmModule.DEFAULT_ORM_ENTITY_DIRECTORY];
 
-        return this.configuration.entityDirectories;
+        return this.configuration.entityDirectories.reduce((allDirs, dir) => {
+            return allDirs.concat(require("glob").sync(this.getSourceCodeDirectory() + dir));
+        }, [] as string[]);
     }
 
     private getOrmSubscriberDirectories(): string[] {
         if (!this.configuration || !this.configuration.subscribersDirectories)
             return [this.getSourceCodeDirectory() + TypeOrmModule.DEFAULT_ORM_SUBSCRIBER_DIRECTORY];
 
-        return this.configuration.subscribersDirectories;
+        return this.configuration.subscribersDirectories.reduce((allDirs, dir) => {
+            return allDirs.concat(require("glob").sync(this.getSourceCodeDirectory() + dir));
+        }, [] as string[]);
     }
 
     private getSourceCodeDirectory() {
