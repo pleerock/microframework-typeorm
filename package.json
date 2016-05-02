@@ -1,7 +1,7 @@
 {
   "name": "microframework-typeorm",
   "private": true,
-  "version": "0.0.2-alpha.3",
+  "version": "0.0.2-alpha.4",
   "description": "TypeORM integration with microframework",
   "license": "Apache-2.0",
   "readmeFilename": "README.md",
@@ -40,7 +40,7 @@
     "sinon-chai": "^2.8.0",
     "tslint": "^3.3.0",
     "tslint-stylish": "^2.1.0-beta",
-    "typescript": "^1.8.7",
-    "typings": "^0.7.7"
+    "typings": "^0.7.7",
+    "typescript": "^1.9.0-dev.20160430"
   }
 }

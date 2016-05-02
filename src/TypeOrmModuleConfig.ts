@@ -6,24 +6,36 @@ import {ConnectionOptions} from "typeorm/connection/ConnectionOptions";
 export interface TypeOrmModuleConfig {
 
     /**
-     * List of directories where from orm entities will be loaded.
+     * Default connection options.
      */
-    entityDirectories?: string[];
+    connection?: {
+        
+        /**
+         * Sets the driver for the default connection. Defaults to "mysql".
+         */
+        driver: string;
 
-    /**
-     * List of directories where from orm subscribers will be loaded.
-     */
-    subscribersDirectories?: string[];
+        /**
+         * Sets the options for the default typeorm connection.
+         */
+        options: ConnectionOptions;
 
-    /**
-     * Sets the options for the default typeorm connection.
-     */
-    connection: ConnectionOptions;
+        /**
+         * List of directories where from orm entities will be loaded.
+         */
+        entityDirectories?: string[];
 
-    /**
-     * Sets the driver for the default connection. Defaults to "mysql".
-     */
-    connectionDriver?: string;
+        /**
+         * List of directories where from orm subscribers will be loaded.
+         */
+        subscriberDirectories?: string[];
+
+        /**
+         * List of directories from where naming strategies will be loaded.
+         */
+        namingStrategyDirectories?: string[];
+        
+    };
 
     /**
      * Used in the case when multiple orm connections are required.
@@ -44,6 +56,22 @@ export interface TypeOrmModuleConfig {
          * Connection options.
          */
         options: ConnectionOptions;
+
+        /**
+         * List of directories where from orm entities will be loaded.
+         */
+        entityDirectories?: string[];
+
+        /**
+         * List of directories where from orm subscribers will be loaded.
+         */
+        subscriberDirectories?: string[];
+
+        /**
+         * List of directories from where naming strategies will be loaded.
+         */
+        namingStrategyDirectories?: string[];
+        
     }[];
 
 }

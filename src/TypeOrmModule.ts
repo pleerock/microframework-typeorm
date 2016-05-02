@@ -1,7 +1,6 @@
 import {Module, ModuleInitOptions} from "microframework/Module";
 import {TypeOrmModuleConfig} from "./TypeOrmModuleConfig";
-import {ConnectionManager} from "typeorm/connection/ConnectionManager";
-import {MysqlDriver} from "typeorm/driver/MysqlDriver";
+import {ConnectionManager, useContainer, createConnection} from "typeorm/typeorm";
 
 /**
  * TypeORM module integration with microframework.
@@ -12,8 +11,8 @@ export class TypeOrmModule implements Module {
     // Constants
     // -------------------------------------------------------------------------
 
-    public static DEFAULT_ORM_ENTITY_DIRECTORY = "entity";
-    public static DEFAULT_ORM_SUBSCRIBER_DIRECTORY = "subscriber";
+    // public static DEFAULT_ORM_ENTITY_DIRECTORY = "entity";
+    // public static DEFAULT_ORM_SUBSCRIBER_DIRECTORY = "subscriber";
 
     // -------------------------------------------------------------------------
     // Properties
@@ -73,40 +72,59 @@ export class TypeOrmModule implements Module {
 
     private setupORM(): Promise<any> {
         this._connectionManager = this.options.container.get(ConnectionManager);
-        this._connectionManager.container = this.options.container;
-        this.addConnections();
-        this._connectionManager.importEntitiesFromDirectories(this.getOrmEntityDirectories());
-        this._connectionManager.importSubscribersFromDirectories(this.getOrmSubscriberDirectories());
-        return this.connect();
+        useContainer(this.options.container);
+        return this.createConnections();
     }
 
-    private addConnections() {
+    private createConnections() {
+        let promises: Promise<any>[] = [];
+
         if (this.configuration.connection) {
-            if (!this.configuration.connectionDriver || this.configuration.connectionDriver === "mysql")
-                this._connectionManager.createConnection(new MysqlDriver(), this.configuration.connection);
+            if (!this.configuration.connection.driver || this.configuration.connection.driver === "mysql") {
+                // this._connectionManager.createConnection(new MysqlDriver(), this.configuration.connection);
+                promises.push(createConnection({
+                    driver: "mysql",
+                    connection: this.configuration.connection,
+                    entityDirectories: this.normalizeDirectories(this.configuration.connection.entityDirectories),
+                    subscriberDirectories: this.normalizeDirectories(this.configuration.connection.subscriberDirectories),
+                    namingStrategyDirectories: this.normalizeDirectories(this.configuration.connection.namingStrategyDirectories)
+                }));
+            }
         }
 
         if (this.configuration.connections) {
-            this.configuration.connections
-                .filter(connection => !connection.driver || connection.driver === "mysql")
-                .forEach(connection => this._connectionManager.createConnection(connection.name, new MysqlDriver(), connection.options));
+            promises.concat(
+                this.configuration
+                    .connections
+                    .filter(connection => !connection.driver || connection.driver === "mysql")
+                    .map(connection => createConnection({
+                        driver: "mysql",
+                        connection: connection.options,
+                        entityDirectories: this.normalizeDirectories(connection.entityDirectories),
+                        subscriberDirectories: this.normalizeDirectories(connection.subscriberDirectories),
+                        namingStrategyDirectories: this.normalizeDirectories(connection.namingStrategyDirectories)
+                    }))
+            );
         }
+        // todo: handle errors: if driver not specified, incorrect specified, no directories specified, directories is missing
+
+        return Promise.all(promises);
     }
 
     private closeConnections(): Promise<any> {
         let promises: Promise<any>[] = [];
         if (this.configuration.connection)
-            promises.push(this._connectionManager.getConnection().close());
+            promises.push(this._connectionManager.get().close());
 
         if (this.configuration.connections)
             promises.concat(this.configuration
                 .connections
-                .map(connection => this._connectionManager.getConnection(connection.name).close()));
+                .map(connection => this._connectionManager.get(connection.name).close()));
 
         return Promise.all(promises);
     }
 
-    private connect(): Promise<void> {
+    /*private connect(): Promise<void> {
         let promises: Promise<any>[] = [];
         if (this.configuration.connection)
             promises.push(this._connectionManager.getConnection().connect());
@@ -118,22 +136,10 @@ export class TypeOrmModule implements Module {
         }
         return Promise.all(promises).then(() => {
         });
-    }
+    }*/
 
-    private getOrmEntityDirectories(): string[] {
-        if (!this.configuration || !this.configuration.entityDirectories)
-            return [this.getSourceCodeDirectory() + TypeOrmModule.DEFAULT_ORM_ENTITY_DIRECTORY];
-
-        return this.configuration.entityDirectories.reduce((allDirs, dir) => {
-            return allDirs.concat(require("glob").sync(this.getSourceCodeDirectory() + dir));
-        }, [] as string[]);
-    }
-
-    private getOrmSubscriberDirectories(): string[] {
-        if (!this.configuration || !this.configuration.subscribersDirectories)
-            return [this.getSourceCodeDirectory() + TypeOrmModule.DEFAULT_ORM_SUBSCRIBER_DIRECTORY];
-
-        return this.configuration.subscribersDirectories.reduce((allDirs, dir) => {
+    private normalizeDirectories(entityDirectories: string[]): string[] {
+        return entityDirectories.reduce((allDirs, dir) => {
             return allDirs.concat(require("glob").sync(this.getSourceCodeDirectory() + dir));
         }, [] as string[]);
     }
