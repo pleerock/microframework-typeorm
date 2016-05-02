@@ -84,7 +84,7 @@ export class TypeOrmModule implements Module {
                 // this._connectionManager.createConnection(new MysqlDriver(), this.configuration.connection);
                 promises.push(createConnection({
                     driver: "mysql",
-                    connection: this.configuration.connection,
+                    connection: this.configuration.connection.options,
                     entityDirectories: this.normalizeDirectories(this.configuration.connection.entityDirectories),
                     subscriberDirectories: this.normalizeDirectories(this.configuration.connection.subscriberDirectories),
                     namingStrategyDirectories: this.normalizeDirectories(this.configuration.connection.namingStrategyDirectories)
@@ -139,6 +139,9 @@ export class TypeOrmModule implements Module {
     }*/
 
     private normalizeDirectories(entityDirectories: string[]): string[] {
+        if (!entityDirectories || !entityDirectories.length)
+            return [];
+        
         return entityDirectories.reduce((allDirs, dir) => {
             return allDirs.concat(require("glob").sync(this.getSourceCodeDirectory() + dir));
         }, [] as string[]);
