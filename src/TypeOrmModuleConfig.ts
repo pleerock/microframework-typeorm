@@ -1,4 +1,4 @@
-import {ConnectionOptions} from "typeorm/connection/ConnectionOptions";
+import {ConnectionOptions} from "typeorm";
 
 /**
  * Configuration for typeorm module.

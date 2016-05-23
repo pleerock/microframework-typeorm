@@ -1,6 +1,6 @@
 import {Module, ModuleInitOptions} from "microframework/Module";
 import {TypeOrmModuleConfig} from "./TypeOrmModuleConfig";
-import {ConnectionManager, useContainer, createConnection} from "typeorm/typeorm";
+import {ConnectionManager, useContainer, createConnection} from "typeorm";
 
 /**
  * TypeORM module integration with microframework.
