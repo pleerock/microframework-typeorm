@@ -1,7 +1,0 @@
-{
-  "ambientDependencies": {
-    "es6-shim": "registry:dt/es6-shim#0.31.2+20160215162030",
-    "mongodb": "registry:dt/mongodb#2.1.0+20160215151319",
-    "node": "registry:dt/node#4.0.0+20160226132328"
-  }
-}

@@ -1,7 +1,7 @@
 {
   "name": "microframework-typeorm",
   "private": true,
-  "version": "0.0.2-alpha.6",
+  "version": "0.0.2-alpha.7",
   "description": "TypeORM integration with microframework",
   "license": "Apache-2.0",
   "readmeFilename": "README.md",
@@ -22,27 +22,29 @@
   ],
   "peerDependencies": {
     "microframework": "~0.5.1",
-    "typeorm": ">=0.0.2-alpha.25"
+    "typeorm": ">=0.0.2-alpha.53"
   },
   "dependencies": {
-    "glob": "^7.0.3"
+    "glob": "^7.0.5"
   },
   "devDependencies": {
+    "@types/node": "^6.0.37",
     "chai": "^3.4.1",
     "chai-as-promised": "^5.2.0",
-    "del": "^2.0.2",
+    "del": "^2.2.2",
     "gulp": "^3.9.1",
-    "gulp-mocha": "^2.2.0",
+    "gulp-mocha": "^3.0.1",
     "gulp-replace": "^0.5.4",
     "gulp-shell": "^0.5.0",
-    "gulp-tslint": "^4.3.3",
-    "gulpclass": "0.1.0",
-    "mocha": "^2.3.4",
-    "sinon": "^1.17.2",
+    "gulp-tslint": "^6.1.1",
+    "gulpclass": "0.1.1",
+    "microframework": "^0.5.4",
+    "mocha": "^3.0.2",
+    "sinon": "^1.17.5",
     "sinon-chai": "^2.8.0",
-    "tslint": "^3.3.0",
+    "tslint": "^3.15.0-dev.0",
     "tslint-stylish": "^2.1.0-beta",
-    "typings": "^0.7.7",
-    "typescript": "^1.9.0-dev.20160430"
+    "typeorm": "0.0.2-alpha.53",
+    "typescript": "^2.1.0-dev.20160823"
   }
 }

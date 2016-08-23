@@ -1,6 +1,6 @@
 import {Module, ModuleInitOptions} from "microframework/Module";
 import {TypeOrmModuleConfig} from "./TypeOrmModuleConfig";
-import {ConnectionManager, useContainer, createConnection} from "typeorm";
+import {ConnectionManager, useContainer, createConnection, ConnectionOptions} from "typeorm";
 
 /**
  * TypeORM module integration with microframework.
@@ -71,8 +71,8 @@ export class TypeOrmModule implements Module {
     // -------------------------------------------------------------------------
 
     private setupORM(): Promise<any> {
-        this._connectionManager = this.options.container.get(ConnectionManager);
         useContainer(this.options.container);
+        this._connectionManager = this.options.container.get(ConnectionManager);
         return this.createConnections();
     }
 
@@ -80,30 +80,14 @@ export class TypeOrmModule implements Module {
         let promises: Promise<any>[] = [];
 
         if (this.configuration.connection) {
-            if (!this.configuration.connection.driver || this.configuration.connection.driver === "mysql") {
-                // this._connectionManager.createConnection(new MysqlDriver(), this.configuration.connection);
-                promises.push(createConnection({
-                    driver: "mysql",
-                    connection: this.configuration.connection.options,
-                    entityDirectories: this.normalizeDirectories(this.configuration.connection.entityDirectories),
-                    subscriberDirectories: this.normalizeDirectories(this.configuration.connection.subscriberDirectories),
-                    namingStrategyDirectories: this.normalizeDirectories(this.configuration.connection.namingStrategyDirectories)
-                }));
-            }
+            promises.push(createConnection(this.normalizeConnectionOptions(this.configuration.connection)));
         }
 
         if (this.configuration.connections) {
-            promises.concat(
+            promises = promises.concat(
                 this.configuration
                     .connections
-                    .filter(connection => !connection.driver || connection.driver === "mysql")
-                    .map(connection => createConnection({
-                        driver: "mysql",
-                        connection: connection.options,
-                        entityDirectories: this.normalizeDirectories(connection.entityDirectories),
-                        subscriberDirectories: this.normalizeDirectories(connection.subscriberDirectories),
-                        namingStrategyDirectories: this.normalizeDirectories(connection.namingStrategyDirectories)
-                    }))
+                    .map(connectionOptions => createConnection(this.normalizeConnectionOptions(connectionOptions)))
             );
         }
         // todo: handle errors: if driver not specified, incorrect specified, no directories specified, directories is missing
@@ -124,31 +108,20 @@ export class TypeOrmModule implements Module {
         return Promise.all(promises);
     }
 
-    /*private connect(): Promise<void> {
-        let promises: Promise<any>[] = [];
-        if (this.configuration.connection)
-            promises.push(this._connectionManager.getConnection().connect());
-
-        if (this.configuration.connections) {
-            promises.concat(this.configuration.connections.map(connection => {
-                return this._connectionManager.getConnection(connection.name).connect();
-            }));
-        }
-        return Promise.all(promises).then(() => {
-        });
-    }*/
+    private normalizeConnectionOptions(connectionOptions: ConnectionOptions) {
+        const newConnectionOptions: ConnectionOptions = Object.assign({}, connectionOptions);
+        newConnectionOptions.entityDirectories = this.normalizeDirectories(newConnectionOptions.entityDirectories);
+        newConnectionOptions.subscriberDirectories = this.normalizeDirectories(newConnectionOptions.subscriberDirectories);
+        newConnectionOptions.namingStrategyDirectories = this.normalizeDirectories(newConnectionOptions.namingStrategyDirectories);
+        newConnectionOptions.entitySchemaDirectories = this.normalizeDirectories(newConnectionOptions.entitySchemaDirectories);
+        return newConnectionOptions;
+    }
 
     private normalizeDirectories(entityDirectories: string[]): string[] {
         if (!entityDirectories || !entityDirectories.length)
             return [];
         
-        return entityDirectories.reduce((allDirs, dir) => {
-            return allDirs.concat(require("glob").sync(this.getSourceCodeDirectory() + dir));
-        }, [] as string[]);
-    }
-
-    private getSourceCodeDirectory() {
-        return this.options.frameworkSettings.srcDirectory + "/";
+        return entityDirectories.map(dir => this.options.frameworkSettings.srcDirectory + "/" + dir);
     }
 
 }
