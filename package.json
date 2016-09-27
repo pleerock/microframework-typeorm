@@ -1,7 +1,7 @@
 {
   "name": "microframework-typeorm",
   "private": true,
-  "version": "0.0.2-alpha.8",
+  "version": "0.0.2-alpha.9",
   "description": "TypeORM integration with microframework",
   "license": "Apache-2.0",
   "readmeFilename": "README.md",
@@ -22,7 +22,7 @@
   ],
   "peerDependencies": {
     "microframework": "~0.5.1",
-    "typeorm": ">=0.0.2-alpha.53"
+    "typeorm": ">=0.0.2-alpha.64"
   },
   "dependencies": {
     "glob": "^7.0.5"
@@ -44,7 +44,7 @@
     "sinon-chai": "^2.8.0",
     "tslint": "^3.15.0-dev.0",
     "tslint-stylish": "^2.1.0-beta",
-    "typeorm": "0.0.2-alpha.53",
+    "typeorm": "0.0.2-alpha.64",
     "typescript": "^2.1.0-dev.20160823"
   }
 }

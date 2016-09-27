@@ -2,6 +2,8 @@ import {Module, ModuleInitOptions} from "microframework/Module";
 import {TypeOrmModuleConfig} from "./TypeOrmModuleConfig";
 import {ConnectionManager, useContainer, createConnection, ConnectionOptions} from "typeorm";
 
+// todo: handle errors: if driver not specified, incorrect specified, no directories specified, directories is missing
+
 /**
  * TypeORM module integration with microframework.
  */
@@ -41,6 +43,11 @@ export class TypeOrmModule implements Module {
     init(options: ModuleInitOptions, configuration: TypeOrmModuleConfig): void {
         this.options = options;
         this.configuration = configuration;
+
+        // note that this must be before this module bootstrap, because on bootstrap other modules
+        // that bootstrapped before this module can load same files, and if they do it, they will be
+        // registered in default typeorm container
+        useContainer(this.options.container);
     }
 
     onBootstrap(): Promise<any> {
@@ -71,7 +78,6 @@ export class TypeOrmModule implements Module {
     // -------------------------------------------------------------------------
 
     private setupORM(): Promise<any> {
-        useContainer(this.options.container);
         this._connectionManager = this.options.container.get(ConnectionManager);
         return this.createConnections();
     }
@@ -79,49 +85,52 @@ export class TypeOrmModule implements Module {
     private createConnections() {
         let promises: Promise<any>[] = [];
 
-        if (this.configuration.connection) {
+        if (this.configuration.connection)
             promises.push(createConnection(this.normalizeConnectionOptions(this.configuration.connection)));
-        }
 
-        if (this.configuration.connections) {
-            promises = promises.concat(
+        if (this.configuration.connections)
                 this.configuration
                     .connections
                     .map(connectionOptions => createConnection(this.normalizeConnectionOptions(connectionOptions)))
-            );
-        }
-        // todo: handle errors: if driver not specified, incorrect specified, no directories specified, directories is missing
+                    .forEach(closePromise => promises.push(closePromise));
 
         return Promise.all(promises);
     }
 
     private closeConnections(): Promise<any> {
         let promises: Promise<any>[] = [];
+
         if (this.configuration.connection)
             promises.push(this._connectionManager.get().close());
 
         if (this.configuration.connections)
-            promises.concat(this.configuration
-                .connections
-                .map(connection => this._connectionManager.get(connection.name).close()));
+            this.configuration.connections
+                .map(connection => this._connectionManager.get(connection.name).close())
+                .forEach(closePromise => promises.push(closePromise));
 
         return Promise.all(promises);
     }
 
-    private normalizeConnectionOptions(connectionOptions: ConnectionOptions) {
-        const newConnectionOptions: ConnectionOptions = Object.assign({}, connectionOptions);
-        newConnectionOptions.entityDirectories = this.normalizeDirectories(newConnectionOptions.entityDirectories);
-        newConnectionOptions.subscriberDirectories = this.normalizeDirectories(newConnectionOptions.subscriberDirectories);
-        newConnectionOptions.namingStrategyDirectories = this.normalizeDirectories(newConnectionOptions.namingStrategyDirectories);
-        newConnectionOptions.entitySchemaDirectories = this.normalizeDirectories(newConnectionOptions.entitySchemaDirectories);
-        return newConnectionOptions;
+    private normalizeConnectionOptions(connectionOptions: ConnectionOptions): ConnectionOptions {
+        return Object.assign({}, connectionOptions, {
+            entities: this.normalizeDirectories(connectionOptions.entities),
+            subscribers: this.normalizeDirectories(connectionOptions.subscribers),
+            namingStrategies: this.normalizeDirectories(connectionOptions.namingStrategies),
+            entitySchemas: this.normalizeDirectories(connectionOptions.entitySchemas),
+        });
     }
 
-    private normalizeDirectories(entityDirectories: string[]): string[] {
-        if (!entityDirectories || !entityDirectories.length)
+    private normalizeDirectories<T>(directoriesOrClasses: string[]|T[]): string[]|T[] {
+        if (!directoriesOrClasses || !directoriesOrClasses.length)
             return [];
         
-        return entityDirectories.map(dir => this.options.frameworkSettings.srcDirectory + "/" + dir);
+        return (directoriesOrClasses as any[]).map(entity => {
+            if (typeof entity === "string") {
+                return this.options.frameworkSettings.srcDirectory + "/" + entity;
+            }
+
+            return entity;
+        });
     }
 
 }
